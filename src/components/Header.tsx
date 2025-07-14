@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, FileText, LogOut } from "lucide-react";
+import { Users, FileText, LogOut, Search } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 const Header: React.FC = () => {
@@ -14,18 +14,35 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-6">
           <div className="flex items-center space-x-3">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">CV-Parser</h1>
-              <p className="text-sm text-gray-600">
-                Candidate Management System
-              </p>
-            </div>
+            <a href="/" className="flex items-center space-x-3 cursor-pointer">
+              <div className="bg-blue-600 p-2 rounded-lg">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">CV-Parser</h1>
+                <p className="text-sm text-gray-600">
+                  Candidate Management System
+                </p>
+              </div>
+            </a>
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.hash = "search";
+              }}
+              className={`font-medium flex items-center space-x-1 transition-colors ${
+                window.location.hash === "#search"
+                  ? "text-purple-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <Search className="w-4 h-4" />
+              <span>Search Candidates</span>
+            </a>
             {/* <a
               href="#"
               className="text-gray-600 hover:text-gray-900 transition-colors"

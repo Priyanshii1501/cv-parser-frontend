@@ -1,27 +1,57 @@
-import React from "react";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import LoginPage from "./components/LoginPage";
-import Header from "./components/Header";
-import FileUpload from "./components/FileUpload";
-import StatsCard from "./components/StatsCard";
-import { FileText, Users, Clock, CheckCircle } from "lucide-react";
+import React from 'react';
+import { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import LoginPage from './components/LoginPage';
+import Header from './components/Header';
+import FileUpload from './components/FileUpload';
+import SearchPage from './components/SearchPage';
+import StatsCard from './components/StatsCard';
+import { FileText, Users, Clock, CheckCircle } from 'lucide-react';
+
 
 const Dashboard: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState('upload');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      setCurrentPage(hash || 'upload');
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'search':
+        return <SearchPage />;
+      case 'upload':
+      default:
+        return <UploadPage />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      {renderPage()}
+    </div>
+  );
+};
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">
-            Upload Candidate Resumes
-          </h2>
-          <p className="text-gray-600 mt-2">
-            Upload and manage candidate resume files. Supported formats include
-            PDF and DOCX.
-          </p>
-        </div>
+const UploadPage: React.FC = () => {
+  return (
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">Upload Candidate Resumes</h2>
+        <p className="text-gray-600 mt-2">
+          Upload and manage candidate resume files. Supported formats include PDF, DOC, and DOCX.
+        </p>
+      </div>
+
 
         {/* Stats Cards */}
         {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -126,7 +156,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div> */}
       </main>
-    </div>
+    
   );
 };
 
