@@ -34,9 +34,13 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      {renderPage()}
+   <div className="min-h-screen flex flex-col">
+      <div className="sticky top-0 w-full z-50 bg-white">
+        <Header />
+      </div>
+      <div className="flex-grow">
+        {renderPage()}
+      </div>
     </div>
   );
 };

@@ -67,7 +67,7 @@ const SearchPage: React.FC = () => {
 
   const generateHubSpotLink = (contactId: string): string => {
     // Generate HubSpot contact link using contact_id
-    return `https://app.hubspot.com/contacts/your-hub-id/contact/${contactId}`;
+    return `https://app.hubspot.com/contacts/146170484/contact/${contactId}`;
   };
 
   const highlightText = (
@@ -93,15 +93,27 @@ const SearchPage: React.FC = () => {
     );
   };
 
+  const normalizedResults =
+    results.length > 0
+      ? (() => {
+          const rawScores = results.map((r) => r.score || 0);
+          const maxScore = Math.max(...rawScores, 0);
+          return results.map((r) => ({
+            ...r,
+            percent: maxScore > 0 ? Math.round((r.score / maxScore) * 100) : 0,
+          }));
+        })()
+      : [];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="bg-purple-600 p-2 rounded-lg">
+            {/* <div className="bg-purple-600 p-2 rounded-lg">
               <Search className="w-6 h-6 text-white" />
-            </div>
+            </div> */}
             <div>
               <h2 className="text-3xl font-bold text-gray-900">
                 Search Candidates
@@ -199,7 +211,7 @@ const SearchPage: React.FC = () => {
                     <p className="text-gray-600">Searching candidates...</p>
                   </div>
                 </div>
-              ) : results.length > 0 ? (
+              ) : normalizedResults.length > 0 ? (
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -221,76 +233,69 @@ const SearchPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {results.map((candidate, index) => (
-                      <tr
-                        key={candidate.contact_id || index}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                              <span className="text-purple-600 font-medium text-sm">
-                                {candidate.name
-                                  ? candidate.name.charAt(0).toUpperCase()
-                                  : "N"}
-                              </span>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
+                    {normalizedResults.map((candidate, index) => (
+                        <tr
+                          key={candidate.contact_id || index}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                <span className="text-purple-600 font-medium text-sm">
+                                  {candidate.name
+                                    ? candidate.name.charAt(0).toUpperCase()
+                                    : "N"}
+                                </span>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
                                 {highlightText(
                                   candidate.name || "N/A",
                                   lastQuery
                                 )}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                ID: {candidate.contact_id}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  ID: {candidate.contact_id}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {candidate.email || "N/A"}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {candidate.email || "N/A"}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
                             {highlightText(
                               candidate.job_title || "N/A",
                               lastQuery
                             )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                              <div
-                                className="bg-purple-600 h-2 rounded-full"
-                                style={{
-                                  width: `${Math.min(
-                                    (candidate.score || 0) * 100,
-                                    100
-                                  )}%`,
-                                }}
-                              />
                             </div>
-                            <span className="text-sm text-gray-600">
-                              {((candidate.score || 0) * 100).toFixed(0)}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <a
-                            href={generateHubSpotLink(candidate.contact_id)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center space-x-1 text-purple-600 hover:text-purple-900 transition-colors"
-                          >
-                            <span>View in HubSpot</span>
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        </td>
-                      </tr>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                <div
+                                  className="bg-purple-600 h-2 rounded-full"
+                                  style={{ width: `${candidate.percent}%` }}
+                                />
+                              </div>
+                              <span className="text-sm text-gray-600">{candidate.percent}%</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a
+                              href={generateHubSpotLink(candidate.contact_id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 text-purple-600 hover:text-purple-900 transition-colors"
+                            >
+                              <span>View in HubSpot</span>
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          </td>
+                        </tr>
                     ))}
                   </tbody>
                 </table>

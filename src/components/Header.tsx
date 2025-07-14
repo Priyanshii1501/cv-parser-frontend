@@ -14,7 +14,13 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-6">
           <div className="flex items-center space-x-3">
-            <a href="/" className="flex items-center space-x-3 cursor-pointer">
+            <a 
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.hash = "upload";
+              }} 
+              className="flex items-center space-x-3 cursor-pointer">
               <div className="bg-blue-600 p-2 rounded-lg">
                 <Users className="w-6 h-6 text-white" />
               </div>
