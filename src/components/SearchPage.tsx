@@ -29,7 +29,7 @@ const SearchPage: React.FC = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [lastQuery, setLastQuery] = useState("");
 
-  const BACKEND_URL = "http://127.0.0.1:8000";
+  const BACKEND_URL = "https://cv-parser-backend-q0mn.onrender.com/parse_resume/";
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
