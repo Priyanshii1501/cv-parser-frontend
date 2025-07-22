@@ -6,6 +6,7 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import MultiSelectSearch from "./MultiSelectSearch";
 
 interface SearchResult {
   contact_id: string;
@@ -22,32 +23,33 @@ interface SearchResponse {
 }
 
 const SearchPage: React.FC = () => {
-  const [query, setQuery] = useState("");
+  const [searchTerms, setSearchTerms] = useState<string[]>([]);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
-  const [lastQuery, setLastQuery] = useState("");
+  const [lastSearchTerms, setLastSearchTerms] = useState<string[]>([]);
 
-  const BACKEND_URL = "https://cv-parser-backend-q0mn.onrender.com";
+  const BACKEND_URL = "http://127.0.0.1:8000";
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!query.trim()) {
-      setError("Please enter a search keyword");
+  const handleSearch = async (terms: string[], mode: "or" | "and" = "or") => {
+    if (terms.length === 0) {
+      setError("Please add at least one search keyword");
       return;
     }
 
     setIsLoading(true);
     setError("");
     setHasSearched(true);
-    setLastQuery(query);
+    setLastSearchTerms(terms);
+    setSearchTerms(terms);
 
     try {
-      const response = await fetch(
-        `${BACKEND_URL}/search/?q=${encodeURIComponent(query.trim())}`
-      );
+      const queryParams = new URLSearchParams();
+      terms.forEach((term) => queryParams.append("keywords", term));
+      queryParams.append("mode", mode);
+
+      const response = await fetch(`${BACKEND_URL}/search/?${queryParams.toString()}`);
 
       if (!response.ok) {
         throw new Error(`Search failed: ${response.statusText}`);
@@ -65,6 +67,14 @@ const SearchPage: React.FC = () => {
     }
   };
 
+  const handleTermsChange = (terms: string[]) => {
+    setSearchTerms(terms);
+    // Clear error when terms change
+    if (error && terms.length > 0) {
+      setError("");
+    }
+  };
+
   const generateHubSpotLink = (contactId: string): string => {
     // Generate HubSpot contact link using contact_id
     return `https://app.hubspot.com/contacts/146170484/contact/${contactId}`;
@@ -72,18 +82,19 @@ const SearchPage: React.FC = () => {
 
   const highlightText = (
     text: string,
-    searchQuery: string
+    searchTerms: string[]
   ): React.ReactNode => {
-    if (!searchQuery.trim()) return text;
+    if (searchTerms.length === 0) return text;
 
-    const regex = new RegExp(
-      `(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
-      "gi"
+    // Create regex pattern for all search terms
+    const escapedTerms = searchTerms.map((term) =>
+      term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     );
+    const regex = new RegExp(`(${escapedTerms.join("|")})`, "gi");
     const parts = text.split(regex);
 
     return parts.map((part, index) =>
-      regex.test(part) ? (
+      escapedTerms.some((term) => new RegExp(term, "gi").test(part)) ? (
         <mark key={index} className="bg-yellow-200 px-1 rounded">
           {part}
         </mark>
@@ -128,55 +139,19 @@ const SearchPage: React.FC = () => {
 
         {/* Search Form */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8">
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div>
-              <label
-                htmlFor="search"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Search Keywords
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="search"
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                  placeholder="Enter skills, job titles, or keywords (e.g., 'React developer', 'Python', 'marketing manager')"
-                  disabled={isLoading}
-                />
-              </div>
+          <MultiSelectSearch
+            onSearch={handleSearch}
+            onTermsChange={handleTermsChange}
+            isLoading={isLoading}
+            placeholder="Type keywords like 'React', 'Python', 'Manager' and press Enter..."
+          />
+
+          {error && (
+            <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 mt-4">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
             </div>
-
-            {error && (
-              <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading || !query.trim()}
-              className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium py-3 px-6 rounded-lg transition-colors focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Searching...</span>
-                </>
-              ) : (
-                <>
-                  <Search className="w-5 h-5" />
-                  <span>Search Candidates</span>
-                </>
-              )}
-            </button>
-          </form>
+          )}
         </div>
 
         {/* Search Results */}
@@ -191,7 +166,11 @@ const SearchPage: React.FC = () => {
                   <p className="text-sm text-gray-600 mt-1">
                     {isLoading
                       ? "Searching..."
-                      : `Found ${results.length} candidates for "${lastQuery}"`}
+                      : lastSearchTerms.length > 0
+                      ? `Found ${
+                          results.length
+                        } candidates for "${lastSearchTerms.join(", ")}"`
+                      : "Enter keywords and click Search to find candidates"}
                   </p>
                 </div>
                 {results.length > 0 && (
@@ -251,7 +230,7 @@ const SearchPage: React.FC = () => {
                                 <div className="text-sm font-medium text-gray-900">
                                 {highlightText(
                                   candidate.name || "N/A",
-                                  lastQuery
+                                  lastSearchTerms
                                 )}
                                 </div>
                                 <div className="text-sm text-gray-500">
@@ -269,7 +248,7 @@ const SearchPage: React.FC = () => {
                             <div className="text-sm text-gray-900">
                             {highlightText(
                               candidate.job_title || "N/A",
-                              lastQuery
+                              lastSearchTerms
                             )}
                             </div>
                           </td>
@@ -305,27 +284,6 @@ const SearchPage: React.FC = () => {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     No candidates found
                   </h3>
-                  <p className="text-gray-600 mb-4">
-                    No candidates match your search for "{lastQuery}". Try
-                    different keywords or check your spelling.
-                  </p>
-                  <div className="text-sm text-gray-500">
-                    <p className="mb-2">Search tips:</p>
-                    <ul className="space-y-1">
-                      <li>
-                        • Try broader terms like "developer" instead of "senior
-                        react developer"
-                      </li>
-                      <li>
-                        • Use skill names like "Python", "JavaScript",
-                        "Marketing"
-                      </li>
-                      <li>
-                        • Search for job titles like "manager", "engineer",
-                        "designer"
-                      </li>
-                    </ul>
-                  </div>
                 </div>
               ) : null}
             </div>
