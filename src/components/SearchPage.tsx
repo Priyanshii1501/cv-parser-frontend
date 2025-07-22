@@ -24,6 +24,7 @@ interface SearchResponse {
 
 const SearchPage: React.FC = () => {
   const [searchTerms, setSearchTerms] = useState<string[]>([]);
+  const [searchMode, setSearchMode] = useState<"or" | "and">("or");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -32,7 +33,10 @@ const SearchPage: React.FC = () => {
 
   const BACKEND_URL = "http://localhost:8000"; // FastAPI server URL
 
-  const handleSearch = async (terms: string[]) => {
+  const handleSearch = async (
+    terms: string[],
+    mode: "or" | "and" = searchMode
+  ) => {
     if (terms.length === 0) {
       setError("Please add at least one search keyword");
       return;
@@ -45,14 +49,13 @@ const SearchPage: React.FC = () => {
     setSearchTerms(terms);
 
     try {
-      // Send keywords as array in request body
-      const response = await fetch(`${BACKEND_URL}/search/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ keywords: terms }),
-      });
+      const queryParams = new URLSearchParams();
+      terms.forEach((term) => queryParams.append("keywords", term));
+      queryParams.append("mode", mode);
+
+      const response = await fetch(
+        `${BACKEND_URL}/search/?${queryParams.toString()}`
+      );
 
       if (!response.ok) {
         throw new Error(`Search failed: ${response.statusText}`);
@@ -78,6 +81,9 @@ const SearchPage: React.FC = () => {
     }
   };
 
+  const handleSearchModeChange = (mode: "or" | "and") => {
+    setSearchMode(mode);
+  };
   const generateHubSpotLink = (contactId: string): string => {
     // Generate HubSpot contact link using contact_id
     return `https://app.hubspot.com/contacts/your-hub-id/contact/${contactId}`;
@@ -136,6 +142,55 @@ const SearchPage: React.FC = () => {
             isLoading={isLoading}
             placeholder="Type keywords like 'React', 'Python', 'Manager' and press Enter..."
           />
+
+          {/* Search Mode Radio Buttons */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Search Mode
+            </label>
+            <div className="flex items-center space-x-6">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="searchMode"
+                  value="or"
+                  checked={searchMode === "or"}
+                  onChange={() => handleSearchModeChange("or")}
+                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 focus:ring-2"
+                  disabled={isLoading}
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  <span className="font-medium">Any Match</span>
+                  <span className="text-gray-500 ml-1">(OR)</span>
+                </span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="searchMode"
+                  value="and"
+                  checked={searchMode === "and"}
+                  onChange={() => handleSearchModeChange("and")}
+                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 focus:ring-2"
+                  disabled={isLoading}
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  <span className="font-medium">All Match</span>
+                  <span className="text-gray-500 ml-1">(AND)</span>
+                </span>
+              </label>
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+              <p>
+                <span className="font-medium">Any Match:</span> Find candidates
+                with at least one of the keywords
+              </p>
+              <p>
+                <span className="font-medium">All Match:</span> Find candidates
+                with all keywords present
+              </p>
+            </div>
+          </div>
 
           {error && (
             <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 mt-4">
@@ -282,6 +337,9 @@ const SearchPage: React.FC = () => {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     No candidates found
                   </h3>
+                 
+                    
+                  
                 </div>
               ) : null}
             </div>
