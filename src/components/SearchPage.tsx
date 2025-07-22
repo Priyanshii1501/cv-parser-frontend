@@ -13,12 +13,14 @@ interface SearchResult {
   name: string;
   email: string;
   job_title: string;
-  extracted_text: string;
-  score: number;
+  full_text: string;
+  skills: string;
+  matched_keywords: string[];
 }
 
 interface SearchResponse {
-  query: string;
+  keywords: string[];
+  mode: string;
   results: SearchResult[];
 }
 
@@ -250,7 +252,7 @@ const SearchPage: React.FC = () => {
                         Job Title
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Match Score
+                        Matched Keywords
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
@@ -299,21 +301,24 @@ const SearchPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                              <div
-                                className="bg-purple-600 h-2 rounded-full"
-                                style={{
-                                  width: `${Math.min(
-                                    (candidate.score || 0) * 100,
-                                    100
-                                  )}%`,
-                                }}
-                              />
-                            </div>
-                            <span className="text-sm text-gray-600">
-                              {((candidate.score || 0) * 100).toFixed(0)}%
-                            </span>
+                          <div className="flex flex-wrap gap-1">
+                            {candidate.matched_keywords &&
+                            candidate.matched_keywords.length > 0 ? (
+                              candidate.matched_keywords.map(
+                                (keyword, keywordIndex) => (
+                                  <span
+                                    key={keywordIndex}
+                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                                  >
+                                    {keyword}
+                                  </span>
+                                )
+                              )
+                            ) : (
+                              <span className="text-sm text-gray-500">
+                                No matches
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -337,9 +342,27 @@ const SearchPage: React.FC = () => {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     No candidates found
                   </h3>
-                 
-                    
-                  
+                  <p className="text-gray-600 mb-4">
+                    No candidates match your search for "
+                    {lastSearchTerms.join(", ")}". Try different keywords or
+                    check your spelling.
+                  </p>
+                  <div className="text-sm text-gray-500">
+                    <p className="mb-2">Search tips:</p>
+                    <ul className="space-y-1">
+                      <li>
+                        • Add multiple keywords like "React" + "Developer"
+                      </li>
+                      <li>
+                        • Use broader terms like "developer" instead of specific
+                        titles
+                      </li>
+                      <li>
+                        • Try skill names like "Python", "JavaScript",
+                        "Marketing"
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               ) : null}
             </div>
