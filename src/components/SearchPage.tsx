@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Users, ExternalLink, AlertCircle, Loader2, Plus, Check, ChevronDown, X } from 'lucide-react';
+import { Search, Users, ExternalLink, AlertCircle, Loader2, Plus, Check, X, FileText } from 'lucide-react';
 import MultiSelectSearch from './MultiSelectSearch';
 
 interface SearchResult {
@@ -10,6 +10,7 @@ interface SearchResult {
   full_text: string;
   skills: string;
   matched_keywords: string[];
+  cv_url_link?: string;
 }
 
 interface SearchResponse {
@@ -65,7 +66,7 @@ const SearchPage: React.FC = () => {
   const loadHubSpotLists = async () => {
     setIsLoadingLists(true);
     setListsError('');
-    
+
     try {
       const response = await fetch(`${BACKEND_URL}/hubspot/lists/search`, {
         method: 'POST',
@@ -85,7 +86,6 @@ const SearchPage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log(data.lists)
       setHubspotLists(data.lists || []);
     } catch (err) {
       let errorMessage = 'Failed to load HubSpot lists';
@@ -186,7 +186,6 @@ const SearchPage: React.FC = () => {
   };
 
   const createNewList = async () => {
-    debugger
     const trimmedName = newListName.trim();
 
     if (!trimmedName) {
@@ -250,9 +249,7 @@ const SearchPage: React.FC = () => {
         throw new Error(errorData.detail || `Failed to add contacts to list: ${addResponse.statusText}`);
       }
 
-      const addResult = await addResponse.json();
-      
-      setAddSuccess(`Successfully created list "${newListName}" and added ${addResult.num_added} contacts`);
+      setAddSuccess(`Successfully created list "${newListName}" and added ${selectedResults.size} contacts`);
       setShowAddModal(false);
       setNewListName('');
       setSelectedResults(new Set());
@@ -309,7 +306,7 @@ const SearchPage: React.FC = () => {
       const result = await response.json();
       const selectedList = hubspotLists.find(list => list.listId === selectedListId);
 
-      setAddSuccess(`Successfully added ${result.num_added} contacts to "${selectedList?.name || 'selected list'}"`);
+      setAddSuccess(`Successfully added ${selectedResults.size} contacts to "${selectedList?.name || 'selected list'}"`);
       setShowAddModal(false);
       setSelectedListId('');
       setSelectedResults(new Set());
@@ -334,7 +331,7 @@ const SearchPage: React.FC = () => {
   };
 
   const generateHubSpotLink = (contactId: string): string => {
-    return `https://app.hubspot.com/contacts/your-hub-id/contact/${contactId}`;
+    return `https://app.hubspot.com/contacts/146170484/contact/${contactId}`;
   };
 
   const highlightText = (text: string, searchTerms: string[]): React.ReactNode => {
@@ -361,7 +358,7 @@ const SearchPage: React.FC = () => {
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="bg-purple-600 p-2 rounded-lg">
+            <div className="bg-blue-600 p-2 rounded-lg">
               <Search className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -409,7 +406,7 @@ const SearchPage: React.FC = () => {
                   value="or"
                   checked={searchMode === 'or'}
                   onChange={() => handleSearchModeChange('or')}
-                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 focus:ring-2"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 focus:ring-2"
                   disabled={isLoading}
                 />
                 <span className="ml-2 text-sm text-gray-700">
@@ -424,7 +421,7 @@ const SearchPage: React.FC = () => {
                   value="and"
                   checked={searchMode === 'and'}
                   onChange={() => handleSearchModeChange('and')}
-                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 focus:ring-2"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 focus:ring-2"
                   disabled={isLoading}
                 />
                 <span className="ml-2 text-sm text-gray-700">
@@ -435,10 +432,10 @@ const SearchPage: React.FC = () => {
             </div>
             <div className="mt-2 text-xs text-gray-500">
               <p>
-                <span className="font-medium">Any Match:</span> Find candidates with at least one of the keywords
+                <span className="font-medium">Any Match:</span> Find candidates with at least one of the keywords.
               </p>
               <p>
-                <span className="font-medium">All Match:</span> Find candidates with all keywords present
+                <span className="font-medium">All Match:</span> Find candidates with all keywords present.
               </p>
             </div>
           </div>
@@ -475,7 +472,7 @@ const SearchPage: React.FC = () => {
                       {selectedResults.size > 0 && (
                         <button
                           onClick={() => setShowAddModal(true)}
-                          className="inline-flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                          className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         >
                           <Plus className="w-4 h-4" />
                           <span>Add to HubSpot ({selectedResults.size})</span>
@@ -491,7 +488,7 @@ const SearchPage: React.FC = () => {
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-4" />
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
                     <p className="text-gray-600">Searching candidates...</p>
                   </div>
                 </div>
@@ -504,7 +501,7 @@ const SearchPage: React.FC = () => {
                           type="checkbox"
                           checked={selectedResults.size === results.length && results.length > 0}
                           onChange={handleSelectAll}
-                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         />
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -520,7 +517,10 @@ const SearchPage: React.FC = () => {
                         Matched Keywords
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        CV URL
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        HubSpot URL
                       </th>
                     </tr>
                   </thead>
@@ -532,13 +532,13 @@ const SearchPage: React.FC = () => {
                             type="checkbox"
                             checked={selectedResults.has(candidate.contact_id)}
                             onChange={() => handleSelectResult(candidate.contact_id)}
-                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                              <span className="text-purple-600 font-medium text-sm">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-blue-600 font-medium text-sm">
                                 {candidate.name ? candidate.name.charAt(0).toUpperCase() : 'N'}
                               </span>
                             </div>
@@ -568,7 +568,7 @@ const SearchPage: React.FC = () => {
                               candidate.matched_keywords.map((keyword, keywordIndex) => (
                                 <span
                                   key={keywordIndex}
-                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                                 >
                                   {keyword}
                                 </span>
@@ -579,14 +579,29 @@ const SearchPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {candidate.cv_url_link ? (
+                            <a
+                              href={candidate.cv_url_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-900 transition-colors"
+                            >
+                              <FileText className="w-4 h-4" />
+                              <span>View CV</span>
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 text-sm">N/A</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <a
                             href={generateHubSpotLink(candidate.contact_id)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center space-x-1 text-purple-600 hover:text-purple-900 transition-colors"
+                            className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-900 transition-colors"
                           >
-                            <span>View in HubSpot</span>
                             <ExternalLink className="w-4 h-4" />
+                            <span>View Contact</span>
                           </a>
                         </td>
                       </tr>
@@ -642,7 +657,7 @@ const SearchPage: React.FC = () => {
                     onClick={() => setAddMode('create')}
                     className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                       addMode === 'create'
-                        ? 'bg-green-100 text-green-800 border-2 border-green-300'
+                        ? 'bg-blue-100 text-blue-800 border-2 border-blue-300'
                         : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
                     }`}
                   >
@@ -652,7 +667,7 @@ const SearchPage: React.FC = () => {
                     onClick={() => setAddMode('existing')}
                     className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                       addMode === 'existing'
-                        ? 'bg-blue-100 text-blue-800 border-2 border-blue-300'
+                        ? 'bg-gray-100 text-gray-800 border-2 border-gray-300'
                         : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
                     }`}
                   >
@@ -672,7 +687,7 @@ const SearchPage: React.FC = () => {
                     value={newListName}
                     onChange={(e) => setNewListName(e.target.value)}
                     placeholder="Enter list name..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     disabled={isAddingToList}
                   />
                 </div>
@@ -764,7 +779,7 @@ const SearchPage: React.FC = () => {
                   }
                   className={`flex-1 px-4 py-2 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
                     addMode === 'create'
-                      ? 'bg-green-600 hover:bg-green-700 disabled:bg-green-400 focus:ring-green-500'
+                      ? 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 focus:ring-blue-500'
                       : 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 focus:ring-blue-500'
                   }`}
                 >
@@ -775,7 +790,7 @@ const SearchPage: React.FC = () => {
                     </>
                   ) : (
                     <span>
-                      {addMode === 'create' ? 'Create & Add to HubSpot' : 'Add to HubSpot'}
+                      {addMode === 'create' ? 'Create & Add' : 'Add to List'}
                     </span>
                   )}
                 </button>

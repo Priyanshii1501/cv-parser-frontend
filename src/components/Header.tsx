@@ -42,7 +42,7 @@ const Header: React.FC = () => {
               }}
               className={`font-medium flex items-center space-x-1 transition-colors ${
                 window.location.hash === "#search"
-                  ? "text-purple-600"
+                  ? "text-blue-800"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
