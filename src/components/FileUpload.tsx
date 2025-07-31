@@ -90,7 +90,7 @@ const FileUpload: React.FC = () => {
 
       xhr.open(
         "POST",
-        "https://cv-parser-backend-q0mn.onrender.com/parse_resume/"
+        "http://127.0.0.1:8000/parse_resume/"
       );
       xhr.send(formData);
 
