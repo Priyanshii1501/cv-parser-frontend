@@ -24,17 +24,7 @@ interface HubSpotList {
   name: string;
 }
 
-interface HubSpotListsResponse {
-  results: HubSpotList[];
-  paging?: {
-    next?: {
-      after: string;
-    };
-  };
-}
-
 const SearchPage: React.FC = () => {
-  const [searchTerms, setSearchTerms] = useState<string[]>([]);
   const [searchMode, setSearchMode] = useState<'or' | 'and'>('or');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedResults, setSelectedResults] = useState<Set<string>>(new Set());
@@ -56,7 +46,7 @@ const SearchPage: React.FC = () => {
   const [isAddingToList, setIsAddingToList] = useState(false);
   const [addSuccess, setAddSuccess] = useState('');
 
-  const BACKEND_URL = 'http://127.0.0.1:8000'; // FastAPI server URL
+  const BACKEND_URL = 'https://cv-parser-backend-q0mn.onrender.com';
 
   // Load HubSpot lists on component mount
   useEffect(() => {
@@ -117,7 +107,6 @@ const SearchPage: React.FC = () => {
     setError('');
     setHasSearched(true);
     setLastSearchTerms(terms);
-    setSearchTerms(terms);
     setSelectedResults(new Set()); // Clear selections on new search
 
     try {
@@ -157,7 +146,6 @@ const SearchPage: React.FC = () => {
   };
 
   const handleTermsChange = (terms: string[]) => {
-    setSearchTerms(terms);
     if (error && terms.length > 0) {
       setError('');
     }
@@ -303,7 +291,6 @@ const SearchPage: React.FC = () => {
         throw new Error(errorData.detail || `Failed to add contacts to list: ${response.statusText}`);
       }
 
-      const result = await response.json();
       const selectedList = hubspotLists.find(list => list.listId === selectedListId);
 
       setAddSuccess(`Successfully added ${selectedResults.size} contacts to "${selectedList?.name || 'selected list'}"`);

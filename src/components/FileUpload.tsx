@@ -10,6 +10,8 @@ interface UploadedFile {
   errorMessage?: string;
 }
 
+const BACKEND_URL = 'https://cv-parser-backend-q0mn.onrender.com';
+
 const FileUpload: React.FC = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -90,7 +92,7 @@ const FileUpload: React.FC = () => {
 
       xhr.open(
         "POST",
-        "http://127.0.0.1:8000/parse_resume/"
+        `${BACKEND_URL}/parse_resume/`
       );
       xhr.send(formData);
 
