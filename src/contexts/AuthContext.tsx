@@ -41,8 +41,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(userData);
       localStorage.setItem("auth", JSON.stringify({ user: userData }));
       return true;
+    } 
+    else if (username === "Raphael" && password === "Raphael@123") {
+      const userData = { username };
+      setIsAuthenticated(true);
+      setUser(userData);
+      localStorage.setItem("auth", JSON.stringify({ user: userData }));
+      return true;
     }
-    return false;
+    else {
+      return false;
+    }
   };
 
   const logout = () => {
